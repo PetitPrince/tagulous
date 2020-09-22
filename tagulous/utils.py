@@ -9,9 +9,10 @@ from django.utils.encoding import force_text
 
 import unicodedata
 try:
-    from unidecode import unidecode
+    from unihandecode import Unihandecoder
+    unidecoder = Unihandecoder(lang="ja")
 except ImportError: # pragma: no cover - tests simulate this
-    unidecode = None
+    unidecoder = None
 
 from tagulous.constants import COMMA, SPACE, QUOTE, DOUBLE_QUOTE, TREE
 
@@ -322,7 +323,9 @@ def clean_tree_name(name):
 ###############################################################################
 ####### Other string operators
 ###############################################################################
-
+def strip_accents(s):
+   return ''.join(c for c in unicodedata.normalize('NFD', s)
+                  if unicodedata.category(c) != 'Mn')
 def unicode_to_ascii(raw):
     """
     Given a string which may be unicode, return something latin-1
@@ -333,8 +336,8 @@ def unicode_to_ascii(raw):
 
     Returns unicode string which only contains ascii characters
     """
-    if unidecode is not None:
-        return str(unidecode(str(raw)))
+    if unidecoder is not None:
+        return unidecoder.decode(str(unidecoder.decode(strip_accents(raw))))
 
     return ''.join(
         c if ord(c) < 128 else '_'
